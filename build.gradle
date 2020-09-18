@@ -1,0 +1,71 @@
+plugins {
+    id 'org.springframework.boot' version '2.3.4.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id 'java'
+    id 'jacoco'
+    id "org.sonarqube" version "3.0"
+
+}
+
+allprojects {
+
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+    apply plugin: 'org.sonarqube'
+
+
+    group = 'com.example'
+    version = '0.0.1-SNAPSHOT'
+    sourceCompatibility = '1.8'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        testImplementation('org.springframework.boot:spring-boot-starter-test') {
+            exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+        }
+        testImplementation 'junit:junit:4.13'
+
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.enabled true
+            csv.enabled false
+            html.enabled true
+        }
+    }
+
+    test {
+        finalizedBy jacocoTestReport // report is always generated after tests run
+    }
+    jacocoTestReport {
+        dependsOn test // tests are required to run before generating the report
+    }
+
+    bootJar {
+        enabled = false
+    }
+
+    jar {
+        enabled = true
+    }
+}
+
+sonarqube {
+    properties {
+        property "sonar.verbose", "true"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.host.url", "http://localhost:8080/"
+        property "sonar.login", "23136c6f1fe347e8c1363d397e61f95d03b24600"
+    }
+}
