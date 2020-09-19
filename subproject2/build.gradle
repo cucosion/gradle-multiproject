@@ -20,4 +20,7 @@ dependencies {
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13'
+
+    compile group: 'commons-collections', name: 'commons-collections', version: '3.1'
+
 }

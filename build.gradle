@@ -4,6 +4,9 @@ plugins {
     id 'java'
     id 'jacoco'
     id "org.sonarqube" version "3.0"
+    id 'checkstyle'
+    id("net.ltgt.errorprone") version "1.2.1"
+    id "org.owasp.dependencycheck" version "6.0.1"
 
 }
 
@@ -14,6 +17,11 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'jacoco'
     apply plugin: 'org.sonarqube'
+    apply plugin: 'checkstyle'
+    apply plugin: 'net.ltgt.errorprone'
+    apply plugin: "org.owasp.dependencycheck"
+
+
 
 
     group = 'com.example'
@@ -25,11 +33,20 @@ allprojects {
     }
 
     dependencies {
+        errorprone("com.google.errorprone:error_prone_core:2.4.0")
+        errorproneJavac("com.google.errorprone:javac:9+181-r4173-1")
         implementation 'org.springframework.boot:spring-boot-starter-web'
         testImplementation('org.springframework.boot:spring-boot-starter-test') {
             exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
         }
         testImplementation 'junit:junit:4.13'
+        compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.1'
+
+        compileOnly 'org.projectlombok:lombok:1.18.12'
+        annotationProcessor 'org.projectlombok:lombok:1.18.12'
+
+        testCompileOnly 'org.projectlombok:lombok:1.18.12'
+        testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
 
     }
 
@@ -52,6 +69,35 @@ allprojects {
         dependsOn test // tests are required to run before generating the report
     }
 
+    //this plugin is useless to run since sonarqube has its own plugin, its good only to perform a localcheck
+    checkstyle {
+        toolVersion '8.36.1';    // good practice to add a version in combination with checkstyle.xml
+        configFile = rootProject.file("config/checkstyle/checkstyle_latest.xml")
+    }
+
+    tasks.withType(Checkstyle) {
+        reports {
+            xml.enabled true
+            html.enabled true
+        }
+    }
+
+    dependencyCheck {
+//        autoUpdate=false
+        cveValidForHours=1
+        format='ALL'
+    }
+
+    check.dependsOn dependencyCheckAggregate
+
+
+    tasks.withType(JavaCompile).configureEach {
+        options.errorprone.disableWarningsInGeneratedCode = true
+        options.errorprone.enabled = false
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+
     bootJar {
         enabled = false
     }
@@ -63,9 +109,11 @@ allprojects {
 
 sonarqube {
     properties {
-        property "sonar.verbose", "true"
         property "sonar.sourceEncoding", "UTF-8"
-        property "sonar.host.url", "http://localhost:8080/"
-        property "sonar.login", "23136c6f1fe347e8c1363d397e61f95d03b24600"
+        property "sonar.host.url", "http://localhost:8081/"
+        property "sonar.login", "6430fb78121a5bece235385fca096d58940eca76"
+        property "sonar.dependencyCheck.reportPath", "${project.buildDir}/reports/dependency-check-report.xml"
+        property "sonar.dependencyCheck.htmlReportPath", "${project.buildDir}/reports/dependency-check-report.html"
     }
+
 }

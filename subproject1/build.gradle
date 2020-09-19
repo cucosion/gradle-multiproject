@@ -3,6 +3,7 @@ plugins {
     id 'io.spring.dependency-management'
     id 'java'
     id 'java-library'
+    id "org.sonarqube"
 }
 
 repositories {
@@ -20,4 +21,7 @@ dependencies {
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13'
+
+    compile group: 'commons-collections', name: 'commons-collections', version: '3.0'
+
 }
