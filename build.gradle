@@ -7,6 +7,8 @@ plugins {
     id 'checkstyle'
     id("net.ltgt.errorprone") version "1.2.1"
     id "org.owasp.dependencycheck" version "6.0.1"
+    //https://projectlombok.org/setup/gradle
+    id "io.freefair.lombok" version "5.2.1"
 
 }
 
@@ -15,18 +17,20 @@ allprojects {
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'java'
+    // toolVersion = "0.8.5". Starting 0.8.0 Jacoco is aware of lombok.@Generated annotation
     apply plugin: 'jacoco'
     apply plugin: 'org.sonarqube'
     apply plugin: 'checkstyle'
     apply plugin: 'net.ltgt.errorprone'
     apply plugin: "org.owasp.dependencycheck"
-
-
-
+    //If for any reason we don’t want to use a plugin, we can use these standard dependencies
+    apply plugin: "io.freefair.lombok"
 
     group = 'com.example'
     version = '0.0.1-SNAPSHOT'
+
     sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
 
     repositories {
         mavenCentral()
@@ -41,12 +45,6 @@ allprojects {
         }
         testImplementation 'junit:junit:4.13'
         compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.1'
-
-        compileOnly 'org.projectlombok:lombok:1.18.12'
-        annotationProcessor 'org.projectlombok:lombok:1.18.12'
-
-        testCompileOnly 'org.projectlombok:lombok:1.18.12'
-        testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
 
     }
 
@@ -69,7 +67,7 @@ allprojects {
         dependsOn test // tests are required to run before generating the report
     }
 
-    //this plugin is useless to run since sonarqube has its own plugin, its good only to perform a localcheck
+    //this plugin is useless to run since sonarqube has its own plugin, its good only to perform a local check
     checkstyle {
         toolVersion '8.36.1';    // good practice to add a version in combination with checkstyle.xml
         configFile = rootProject.file("config/checkstyle/checkstyle_latest.xml")
@@ -94,8 +92,7 @@ allprojects {
     tasks.withType(JavaCompile).configureEach {
         options.errorprone.disableWarningsInGeneratedCode = true
         options.errorprone.enabled = false
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
+
     }
 
     bootJar {
@@ -106,14 +103,17 @@ allprojects {
         enabled = true
     }
 }
+//sonar.java.checkstyle.reportPaths	Comma-delimited list of paths to reports from Checkstyle
+//https://docs.sonarqube.org/latest/analysis/external-issues/
+//property "sonar.java.checkstyle.reportPaths", "${project.buildDir}/reports/checkstyle.xml"
 
 sonarqube {
     properties {
         property "sonar.sourceEncoding", "UTF-8"
         property "sonar.host.url", "http://localhost:8081/"
         property "sonar.login", "6430fb78121a5bece235385fca096d58940eca76"
-        property "sonar.dependencyCheck.reportPath", "${project.buildDir}/reports/dependency-check-report.xml"
-        property "sonar.dependencyCheck.htmlReportPath", "${project.buildDir}/reports/dependency-check-report.html"
+        property "sonar.dependencyCheck.reportPath", "build/reports/dependency-check-report.xml"
+        property "sonar.dependencyCheck.htmlReportPath", "build/reports/dependency-check-report.html"
+        property "sonar.java.checkstyle.reportPaths", "${project.buildDir}/reports/checkstyle/main.xml"
     }
-
 }
